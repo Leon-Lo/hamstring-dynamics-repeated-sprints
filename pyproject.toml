@@ -1,0 +1,10 @@
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
+]
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["F", "E", "W"]
+ignore = ["D100", "T201", "C901", "PLR0912", "PLR0913", "PLR0915", "S314", "ERA001", "E501"]
