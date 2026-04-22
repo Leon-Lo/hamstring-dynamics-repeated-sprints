@@ -1,0 +1,26 @@
+name: opensim
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - numpy
+  # - libcxx # Uncomment if on macOS
+  - opensim-org::opensim
+  - pandas
+  - matplotlib
+  - ipykernel
+  - pytest
+  - pytest-mock
+  - scipy
+  - scikit-learn
+  - statsmodels
+  - tqdm
+  - seaborn
+  - pip
+  - pip:
+    - spm1d==0.4.53
+    - thefuzz==0.22.1
+
+### To create the environment, run: conda env create -n opensim -f environment.yml ###
+### To update the environment, run: conda env update -n opensim -f environment.yml ###
