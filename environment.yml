@@ -17,6 +17,7 @@ dependencies:
   - statsmodels
   - tqdm
   - seaborn
+  - pingouin
   - pip
   - pip:
     - spm1d==0.4.53
