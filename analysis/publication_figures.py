@@ -407,13 +407,13 @@ def generate_all_publication_figures():  # noqa: PLR0912
             OVERVIEW_DIR,
             False,
         ],
-        "figure_2_master_plot_peak_norm_fiber_lengths": [
-            plots.master_plot_with_peak_norm_fiber_lengths,
         "figure_1b_master_plot_spm": [
             plots.plot_master_plot_before_after_all_with_spm,
             OVERVIEW_DIR,
             False,
         ],
+        "figure_2_master_plot_peak_norm_fiber_lengths": [
+            plots.master_plot_with_peak_norm_fiber_lengths,
             OVERVIEW_DIR,
             False,
         ],
