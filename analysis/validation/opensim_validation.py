@@ -18,7 +18,7 @@ from matplotlib.figure import Figure
 from tqdm import tqdm
 
 # Add project root to Python path and set as working directory
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 os.chdir(project_root)
@@ -62,7 +62,7 @@ if SAVE_FIGURES:
     ]:
         dir_path.mkdir(parents=True, exist_ok=True)
 
-TRIAL = "RunL1"  # Standard trial for comparison
+TRIAL = "RunL1"  # Common post trial present for all subjects
 
 # Threading configuration
 cpu_count = os.cpu_count() or 4

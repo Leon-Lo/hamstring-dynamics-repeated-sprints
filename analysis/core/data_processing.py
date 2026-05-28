@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 # Add project root to Python path and set as working directory
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 os.chdir(project_root)
@@ -32,7 +32,7 @@ tools = Simulation_analyzer()
 # PARALLELIZATION SETTINGS
 # Increase max_workers (1-3) for faster processing if your system can handle it
 # 1 = safe/sequential, 2-3 = faster but more resource intensive
-MAX_WORKERS = 1  # Default to 1 worker (safe, no crashes)
+MAX_WORKERS = 4  # Default to 1 worker (safe, no crashes)
 
 # %% Get all subject IDs
 subject_ids = OpensimModelManager.get_ids()
@@ -64,6 +64,13 @@ print("\nCreating split results files...")
 analysis_utils.create_split_results()
 analysis_utils.create_torques_results_wide_df()
 print("✓ Split results created in data/split_results/")
+
+# %% Run SPM analysis and cache results to data/split_results/spm/
+# Must run after create_split_results(). Re-run this cell whenever subjects or
+# trials change so that all downstream plots use up-to-date SPM files.
+print("\nRunning SPM analysis and caching results...")
+analysis_utils.spm_analysis()
+print("✓ SPM cache saved to data/split_results/spm/")
 
 # %% Create muscle parameters CSV
 print("\nExtracting muscle parameters...")
