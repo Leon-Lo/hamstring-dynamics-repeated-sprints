@@ -38,7 +38,8 @@ tools = Simulation_analyzer()
 
 # %% Configure subject and trial for testing
 TEST_SUBJECT = "019"
-TEST_TRIAL = "RunL1"
+_test_subject_trials = plots.master_df[plots.master_df["subject_id"] == int(TEST_SUBJECT)]["trial"].unique()
+TEST_TRIAL = analysis_utils._get_last_post_trial(_test_subject_trials) or "RunL1"
 
 # %% Single trial kinematics (IK)
 fig, axes = plots.plot_single_ik(TEST_SUBJECT, TEST_TRIAL)

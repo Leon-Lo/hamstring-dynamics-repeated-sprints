@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 # Add project root to Python path and set as working directory
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 os.chdir(project_root)
@@ -65,7 +65,8 @@ if SAVE_FIGURES:
 TEST_SUBJECT = "024"
 # TEST_TRIAL = "Run_baselineA1"
 # TEST_TRIAL = "Run_baselineB1"
-TEST_TRIAL = "RunL1"
+_test_subject_trials = plots.master_df[plots.master_df["subject_id"] == int(TEST_SUBJECT)]["trial"].unique()
+TEST_TRIAL = analysis_utils._get_last_post_trial(_test_subject_trials) or "RunL1"
 
 all_subjects = subject_utils.get_all_subjects()
 
