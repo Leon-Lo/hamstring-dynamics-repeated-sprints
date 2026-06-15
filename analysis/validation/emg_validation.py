@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 
 SIM_BASE = Path("data/simulations")
-OUT_DIR = Path("data/plot_results")
+OUT_DIR = Path("data/plot_results/validation")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 GROUP_COLORS = {"CON": "black", "FAIM": "darkorange", "FAIS": "red"}
@@ -108,12 +108,14 @@ for _, row in info.iterrows():
             continue
         emg_path = trial_dir / "emg.mot"
         adj_path = trial_dir / "Optimised" / "AdjustedEmgs.sto"
+        act_path = trial_dir / "Optimised" / "Activations.sto"
         if not (emg_path.exists() and adj_path.exists()):
             continue
 
         try:
             emg_df = _parse_file(emg_path)
             adj_df = _parse_file(adj_path)
+            act_df = _parse_file(act_path) if act_path.exists() else None
         except Exception:
             continue
 
@@ -138,6 +140,32 @@ for _, row in info.iterrows():
         adj_bflh = adj_df.loc[mask, bflh_col].values
         adj_semi = adj_df.loc[mask, semi_col].values
 
+        # CEINMS activations (optional — file may not exist for all trials)
+        act_bflh = act_semi = None
+        r2_act_bflh = r2_act_semi = float("nan")
+        rmse_act_bflh = rmse_act_semi = float("nan")
+        if act_df is not None and bflh_col in act_df.columns and semi_col in act_df.columns:
+            t_act = act_df["time"].values
+            act_lo = max(t_emg[0], t_act[0])
+            act_hi = min(t_emg[-1], t_act[-1])
+            if act_hi - act_lo >= 0.05:
+                act_mask = (t_act >= act_lo) & (t_act <= act_hi)
+                t_act_common = t_act[act_mask]
+                act_bflh = act_df.loc[act_mask, bflh_col].values
+                act_semi = act_df.loc[act_mask, semi_col].values
+                emg_bflh_act = np.interp(t_act_common, t_emg, emg_df["BFLH"].values)
+                emg_semi_act = np.interp(t_act_common, t_emg, emg_df["SEMIMEM"].values)
+                pct_act = (t_act_common - t_act_common[0]) / (t_act_common[-1] - t_act_common[0]) * 100
+                r2_act_bflh = _r2(emg_bflh_act, act_bflh)
+                rmse_act_bflh = _rmse(emg_bflh_act, act_bflh)
+                r2_act_semi = _r2(emg_semi_act, act_semi)
+                rmse_act_semi = _rmse(emg_semi_act, act_semi)
+            else:
+                pct_act = None
+                emg_bflh_act = emg_semi_act = None
+        else:
+            pct_act = emg_bflh_act = emg_semi_act = None
+
         trials.append({
             "name": trial_dir.name,
             "pct": pct,
@@ -149,6 +177,16 @@ for _, row in info.iterrows():
             "adj_semi": adj_semi,
             "r2_semi": _r2(emg_semi, adj_semi),
             "rmse_semi": _rmse(emg_semi, adj_semi),
+            # activations
+            "pct_act": pct_act,
+            "emg_bflh_act": emg_bflh_act,
+            "act_bflh": act_bflh,
+            "r2_act_bflh": r2_act_bflh,
+            "rmse_act_bflh": rmse_act_bflh,
+            "emg_semi_act": emg_semi_act,
+            "act_semi": act_semi,
+            "r2_act_semi": r2_act_semi,
+            "rmse_act_semi": rmse_act_semi,
         })
 
     if trials:
@@ -295,6 +333,146 @@ for muscle, ek, ak, r2k, rmsek in MUSCLES_WAVE:
     plt.tight_layout(rect=[0, 0.04, 1, 0.97])
 
     out = OUT_DIR / f"emg_comparison_{muscle.lower()}.png"
+    plt.savefig(out, dpi=150, bbox_inches="tight")
+    print(f"Saved {out}")
+    plt.close(fig)
+
+
+# =============================================================================
+# PLOT 3: R² Bar Plots — EMG vs CEINMS Activations
+# =============================================================================
+
+MUSCLES_ACT_BAR = [("BFLH", "r2_act_bflh"), ("SEMIMEM", "r2_act_semi")]
+
+for muscle, r2_key in MUSCLES_ACT_BAR:
+    fig, axes = plt.subplots(
+        NROWS, NCOLS,
+        figsize=(NCOLS * 2.8, NROWS * 2.6),
+        squeeze=False,
+        constrained_layout=False,
+    )
+    axes_flat = axes.flatten()
+
+    for idx, subj in enumerate(valid_subjects):
+        ax = axes_flat[idx]
+        entry = store[subj]
+        group = entry["group"]
+
+        trials = entry["trials"]
+        names = [t["name"] for t in trials]
+        r2_values = [t[r2_key] for t in trials]
+        colors = [TRIAL_COLORS.get(n, "#7f7f7f") for n in names]
+
+        x = np.arange(len(trials))
+        bars = ax.bar(x, r2_values, color=colors, edgecolor="white",
+                      linewidth=0.6, width=0.65, zorder=3)
+
+        for bar, val in zip(bars, r2_values):
+            if not np.isnan(val):
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    min(val + 0.03, 0.97),
+                    f"{val:.2f}",
+                    ha="center", va="bottom", fontsize=4.5, color="dimgray",
+                )
+
+        ax.set_xlim(-0.5, len(trials) - 0.5)
+        ax.set_ylim(0, 1.05)
+        ax.set_xticks(x)
+        ax.set_xticklabels(
+            [n.replace("Run_baseline", "BL-").replace("Run", "") for n in names],
+            fontsize=5, rotation=30, ha="right",
+        )
+        ax.tick_params(axis="y", labelsize=5.5)
+        ax.set_ylabel("R²", fontsize=6)
+        ax.axhline(0, color="gray", lw=0.5)
+        ax.set_title(f"S{subj}", fontsize=8,
+                     color=GROUP_COLORS.get(group, "dimgray"),
+                     fontweight="bold", pad=3)
+
+    for idx in range(n_subj, len(axes_flat)):
+        axes_flat[idx].set_visible(False)
+
+    trial_handles = [mpatches.Patch(color=c, label=n) for n, c in TRIAL_COLORS.items()]
+    group_handles = [mpatches.Patch(color=c, label=g) for g, c in GROUP_COLORS.items()]
+
+    fig.subplots_adjust(left=0.06, right=0.98, top=0.93, bottom=0.10,
+                        hspace=0.60, wspace=0.45)
+    fig.legend(handles=trial_handles + group_handles,
+               loc="lower center", ncol=5, fontsize=8,
+               bbox_to_anchor=(0.5, 0.01), frameon=True,
+               title="Trial name  |  Group", title_fontsize=8)
+    fig.suptitle(f"{muscle}  —  R²  (EMG measured vs CEINMS Activations)",
+                 fontsize=13, fontweight="bold")
+
+    out = OUT_DIR / f"r2_barplot_activations_{muscle.lower()}.png"
+    fig.savefig(out, dpi=150)
+    print(f"Saved {out}")
+    plt.close(fig)
+
+
+# =============================================================================
+# PLOT 4: Waveform Overlay — EMG vs CEINMS Activations
+# =============================================================================
+
+MUSCLES_ACT_WAVE = [
+    ("BFLH",    "emg_bflh_act", "act_bflh", "r2_act_bflh",  "rmse_act_bflh"),
+    ("SEMIMEM", "emg_semi_act", "act_semi", "r2_act_semi",  "rmse_act_semi"),
+]
+
+for muscle, ek, ak, r2k, rmsek in MUSCLES_ACT_WAVE:
+    fig, axes = plt.subplots(
+        NROWS, NCOLS,
+        figsize=(NCOLS * 3.8, NROWS * 2.8),
+        squeeze=False,
+    )
+    axes_flat = axes.flatten()
+
+    for idx, subj in enumerate(valid_subjects):
+        ax = axes_flat[idx]
+        entry = store[subj]
+        group = entry["group"]
+
+        for ti, trial in enumerate(entry["trials"]):
+            if trial[ek] is None or trial[ak] is None:
+                continue
+            c = TRIAL_PALETTE[ti % len(TRIAL_PALETTE)]
+            lbl = (f"{trial['name']}\n"
+                   f"R²={trial[r2k]:.2f}  RMSE={trial[rmsek]:.3f}")
+            ax.plot(trial["pct_act"], trial[ek], color=c, lw=1.1, alpha=0.85)
+            ax.plot(trial["pct_act"], trial[ak], color=c, lw=1.1, ls="--",
+                    alpha=0.70, label=lbl)
+
+        ax.set_title(f"S{subj}", fontsize=8,
+                     color=GROUP_COLORS.get(group, "dimgray"),
+                     fontweight="bold", pad=3)
+        ax.set_xlim(0, 100)
+        ax.set_ylim(bottom=0)
+        ax.tick_params(labelsize=5.5)
+        ax.set_xlabel("Gait cycle (%)", fontsize=5.5)
+        ax.set_ylabel("Amplitude (norm.)", fontsize=5.5)
+        leg = ax.legend(fontsize=4.0, loc="upper right",
+                        framealpha=0.6, handlelength=1.2,
+                        labelspacing=0.2, borderpad=0.4)
+        for txt in leg.get_texts():
+            txt.set_color("dimgray")
+
+    for idx in range(n_subj, len(axes_flat)):
+        axes_flat[idx].set_visible(False)
+
+    style_handles = [
+        Line2D([0], [0], color="gray", lw=1.4, label="EMG measured (emg.mot)"),
+        Line2D([0], [0], color="gray", lw=1.4, ls="--", label="CEINMS Activations"),
+    ]
+    group_handles = [mpatches.Patch(color=c, label=g) for g, c in GROUP_COLORS.items()]
+    fig.legend(handles=style_handles + group_handles,
+               loc="lower center", ncol=5, fontsize=9,
+               bbox_to_anchor=(0.5, -0.01), frameon=True)
+    fig.suptitle(f"{muscle}  —  EMG measured vs CEINMS Activations",
+                 fontsize=13, fontweight="bold")
+    plt.tight_layout(rect=[0, 0.04, 1, 0.97])
+
+    out = OUT_DIR / f"emg_vs_activations_{muscle.lower()}.png"
     plt.savefig(out, dpi=150, bbox_inches="tight")
     print(f"Saved {out}")
     plt.close(fig)

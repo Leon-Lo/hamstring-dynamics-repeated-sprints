@@ -87,7 +87,7 @@ fig.legend(handles=legend_handles, loc="lower center", ncol=4,
 fig.suptitle("Gamma vs Mean EMG — BFLH & SEMIMEM", fontsize=14, fontweight="bold", y=1.02)
 plt.tight_layout()
 
-out_path = Path("data/plot_results/gamma_emg_correlation.png")
+out_path = Path("data/plot_results/validation/gamma_emg_correlation.png")
 out_path.parent.mkdir(parents=True, exist_ok=True)
 plt.savefig(out_path, dpi=150, bbox_inches="tight")
 print(f"Saved to {out_path}")

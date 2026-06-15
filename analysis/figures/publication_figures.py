@@ -369,6 +369,26 @@ if result is not None:
 else:
     print("✗ Supp Figure 5 - method returned None")
 
+# %% Supplementary Figure 6: EMG vs CEINMS Activations
+print("Generating Supplementary Figure 6...")
+result = plots.plot_emg_ceinms_activations()
+if result is not None:
+    fig, axes = result
+    if fig is not None:
+        plots.save_figure(
+            fig,
+            BIOMECHANICS_DIR,
+            f"supp_figure_6_emg_vs_ceinms_activations.{FORMAT}",
+            dpi=DPI,
+            format=FORMAT,
+        )
+        plt.show()
+        print("✓ Supp Figure 6 saved")
+    else:
+        print("✗ Supp Figure 6 - fig is None")
+else:
+    print("✗ Supp Figure 6 - method returned None")
+
 # %% ================================================
 # %%    REPRESENTATIVE SUBJECT FIGURES
 # %% ================================================

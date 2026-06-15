@@ -281,6 +281,50 @@ plt.savefig(str(_PLOT_DIR / "Figure4.png"), dpi=150, bbox_inches="tight")
 print(f"Saved {_PLOT_DIR / 'Figure4.png'}")
 
 # =============================================================================
+# Per-subject eccentric window plots
+# =============================================================================
+_PER_SUBJ_DIR = _PLOT_DIR / "per_subject"
+_PER_SUBJ_DIR.mkdir(parents=True, exist_ok=True)
+
+_per_subj_legend = [
+    Line2D([0], [0], color="steelblue", lw=1.5, label="Knee power"),
+    Line2D([0], [0], color="steelblue", lw=6, alpha=0.25, label="Eccentric window"),
+] + [Line2D([0], [0], color=c, lw=1.5, label=MUSCLE_ABBREV[m]) for m, c in MUSCLE_COLORS.items()]
+
+for subj in subject_ids:
+    grp = pre_df[pre_df["subject_id"] == subj]
+    time = np.asarray(grp["time"], dtype=float)
+    ang_vel = np.gradient(np.asarray(grp["knee_angle"], dtype=float), time)
+    power = ang_vel * np.asarray(grp["knee_angle_moment"], dtype=float)
+    mask = eccentric_mask(grp)
+    idx = grp["index"].values
+
+    fig_s, ax_s = plt.subplots(figsize=(8, 5))
+    ax_s.plot(idx, power, color="steelblue", lw=1.5)
+    ax_s.axhline(0, color="black", lw=0.8, ls="--")
+    ax_s.fill_between(idx, power, 0, where=mask, color="steelblue", alpha=0.25)
+    ax2_s = ax_s.twinx()
+    for muscle, color in MUSCLE_COLORS.items():
+        force = np.asarray(grp[f"{muscle}_fiber_force"], dtype=float)
+        ax2_s.plot(idx, force, color=color, lw=1.2, alpha=0.85, label=MUSCLE_ABBREV[muscle])
+    ax2_s.tick_params(labelsize=9, colors="grey")
+    ax2_s.spines["top"].set_visible(False)
+    ax_s.set_xlabel("Sprint cycle (%)", fontsize=10)
+    ax_s.set_ylabel("Knee joint power (W)", fontsize=10, color="steelblue")
+    ax2_s.set_ylabel("Muscle fiber force (N)", fontsize=10, color="grey")
+    ax_s.tick_params(labelsize=9)
+    ax_s.spines["top"].set_visible(False)
+    ax_s.spines["right"].set_visible(False)
+    fig_s.tight_layout(rect=[0, 0, 1, 0.90])
+    fig_s.legend(handles=_per_subj_legend, loc="upper right", ncol=len(_per_subj_legend),
+                 fontsize=9, frameon=False, bbox_to_anchor=(1.0, 1.0), borderpad=1.0, labelspacing=0.6)
+    _out_path = _PER_SUBJ_DIR / f"eccentric_window_subject_{subj}.png"
+    plt.savefig(str(_out_path), dpi=150, bbox_inches="tight")
+    plt.close(fig_s)
+
+print(f"Saved {len(subject_ids)} per-subject eccentric window plots to {_PER_SUBJ_DIR}")
+
+# =============================================================================
 # Eccentric % contribution — peak force, impulse, work
 # =============================================================================
 def _peak_force_ecc(grp: pd.DataFrame, muscle: str) -> float:
