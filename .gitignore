@@ -7,3 +7,4 @@ __pycache__/
 *opensim.log
 ceinms/executables/torch_cpu.dll
 .claude/
+data/split_results/

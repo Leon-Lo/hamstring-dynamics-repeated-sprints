@@ -1,3 +1,11 @@
+[project]
+name = "hamstring-length-repeated-sprints"
+version = "1.0.0"
+description = "Analysis pipeline for hamstring muscle-fiber mechanics during repeated sprint exercise"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+
 [tool.pytest.ini_options]
 pythonpath = [
   "."

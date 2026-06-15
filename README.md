@@ -23,17 +23,27 @@ This repository provides the full analysis pipeline used to study how hamstring 
 │   └── xml_utils.py            # OpenSim XML setup file editing
 │
 ├── analysis/                   # Analysis and figure scripts (run in order)
-│   ├── data_processing.py      # Step 1 — run simulations, build master_results.csv
-│   ├── participant_demographics.py  # Descriptive statistics and demographics table
-│   ├── sprint_sp_t_analysis.py      # Spatio-temporal variables (speed, contact time, …)
-│   ├── fatigue_analysis.py            # Core publication results: fiber length, force, work
-│   ├── peak_fiber_length_analysis.py  # Peak normalised fiber length: pre vs post
-│   ├── responder_analysis.py          # Responder / non-responder classification
-│   ├── supplementary_analysis.py      # Timing, biomechanics tables, paired plots
-│   ├── ceinms_analysis.py             # CEINMS EMG-driven results
-│   ├── opensim_validation.py          # Simulation validation checks
-│   ├── exploratory.py                 # Exploratory data analysis
-│   └── publication_figures.py         # Step 2 — final publication-quality figures
+│   ├── core/
+│   │   └── data_processing.py  # Step 1 — run simulations, build master_results.csv
+│   ├── figures/
+│   │   ├── publication_figures.py  # Step 2 — final publication-quality figures
+│   │   └── combined_figures.py     # Combined multi-panel figures
+│   ├── tables/
+│   │   └── combined_tables.py      # Combined results tables
+│   ├── validation/
+│   │   ├── ceinms_analysis.py      # CEINMS EMG-driven results
+│   │   ├── emg_validation.py       # EMG signal validation
+│   │   ├── gamma_correlation.py    # Gamma correlation checks
+│   │   └── opensim_validation.py   # Simulation validation checks
+│   ├── demographics.py             # Participant demographics and trial counts
+│   ├── spatiotemporal.py           # Spatio-temporal variables (speed, contact time, …)
+│   ├── fatigue_effects.py          # Core publication results: RM ANOVA, post-hoc tests
+│   ├── muscle_mechanics.py         # Fiber length trajectories and SPM waveforms
+│   ├── eccentric_loading.py        # Eccentric impulse, work, and ANCOVA
+│   ├── kinematics.py               # Joint angles and moments SPM waveforms
+│   ├── risk_stratification.py      # Responder / non-responder classification
+│   ├── clinical_groups.py          # CON / FAIM / FAIS group comparisons
+│   └── exploratory.py              # Exploratory data analysis
 │
 ├── ceinms/                     # CEINMS EMG-driven simulation scripts (Windows only)
 │
@@ -54,7 +64,7 @@ This repository provides the full analysis pipeline used to study how hamstring 
 | Dependency | Version | Install |
 | --- | --- | --- |
 | Python | ≥ 3.10 | via conda |
-| OpenSim | 4.x | via conda (see below) |
+| OpenSim | ≥ 4.5 | via conda (see below) |
 | spm1d | 0.4.53 | via pip |
 
 ### Environment Setup
@@ -64,7 +74,7 @@ conda env create -n opensim -f environment.yml
 conda activate opensim
 ```
 
-This installs OpenSim, NumPy, pandas, matplotlib, seaborn, scikit-learn, statsmodels, scipy, spm1d, and all other dependencies.
+This installs OpenSim, NumPy, pandas, matplotlib, seaborn, scikit-learn, statsmodels, scipy, spm1d, pingouin, and all other dependencies.
 
 ## Data Structure
 
@@ -95,13 +105,16 @@ The aggregated results file `data/master_results.csv` is included. Run the analy
 
 ```bash
 conda activate opensim
-python analysis/participant_demographics.py
-python analysis/sprint_sp_t_analysis.py
-python analysis/fatigue_analysis.py
-python analysis/peak_fiber_length_analysis.py
-python analysis/responder_analysis.py
-python analysis/supplementary_analysis.py
-python analysis/publication_figures.py   # generates figures to data/plot_results/
+python analysis/demographics.py
+python analysis/spatiotemporal.py
+python analysis/fatigue_effects.py
+python analysis/muscle_mechanics.py
+python analysis/eccentric_loading.py
+python analysis/kinematics.py
+python analysis/risk_stratification.py
+python analysis/clinical_groups.py
+python analysis/figures/publication_figures.py   # generates figures to data/plot_results/
+python analysis/tables/combined_tables.py        # assembles combined results tables
 ```
 
 ### Option B — Re-run from raw simulation data
@@ -110,7 +123,7 @@ If you have the raw OpenSim data (not distributed in this repository) set up und
 
 ```bash
 conda activate opensim
-python analysis/data_processing.py      # runs IK → ID → SO → MA for all subjects
+python analysis/core/data_processing.py      # runs IK → ID → SO → MA for all subjects
 ```
 
 This writes outputs back into each trial directory and rebuilds `data/master_results.csv`.
@@ -131,6 +144,14 @@ The aggregated results (`data/master_results.csv`) required to reproduce all ana
 conda activate opensim
 pytest
 ```
+
+## Citation
+
+If you use this code or data, please cite:
+
+> [Authors]. [Title]. *[Journal]*, [Year]. DOI: [DOI]
+
+A `CITATION.cff` file is also provided for citation managers and GitHub's "Cite this repository" feature.
 
 ## License
 

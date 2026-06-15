@@ -4,20 +4,20 @@ channels:
   - conda-forge
 dependencies:
   - python>=3.10
-  - numpy
+  - numpy>=2.0,<3
   # - libcxx # Uncomment if on macOS
-  - opensim-org::opensim
-  - pandas
-  - matplotlib
+  - opensim-org::opensim>=4.5
+  - pandas>=3.0,<4
+  - matplotlib>=3.10,<4
   - ipykernel
   - pytest
   - pytest-mock
-  - scipy
-  - scikit-learn
-  - statsmodels
+  - scipy>=1.17,<2
+  - scikit-learn>=1.8,<2
+  - statsmodels>=0.14,<1
   - tqdm
-  - seaborn
-  - pingouin
+  - seaborn>=0.13,<1
+  - pingouin>=0.6,<1
   - pip
   - pip:
     - spm1d==0.4.53

@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the paper and the software."
+type: software
+title: "hamstring-length-repeated-sprints"
+abstract: "Analysis pipeline for hamstring muscle-fiber mechanics during repeated sprint exercise using musculoskeletal simulations."
+authors:
+  - family-names: "Lobe"
+    given-names: "Leon"
+    orcid: "https://orcid.org/0009-0006-5386-8956"
+license: MIT
+repository-code: "https://github.com/Leon-Lo/hamstring-length-repeated-sprints"
+version: "1.0.0"
+date-released: "2026-06-15"
+
+# preferred-citation:
+#   type: article
+#   authors:
+#     - family-names: "Lobe"
+#       given-names: "Leon"
+#       orcid: "https://orcid.org/0009-0006-5386-8956"
+#     # TODO: add remaining co-authors
+#   title: "TODO: paper title"
+#   journal: "TODO: journal name"
+#   year: 2026  # TODO: confirm year
+#   # doi: "10.XXXX/XXXXXXX"  # TODO: add DOI once assigned
